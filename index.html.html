@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkScope v2 — Backlink Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F8FAFC;
+  --surface:#FFFFFF;
+  --surface2:#F1F5F9;
+  --border:#E5E7EB;
+  --border2:#D1D5DB;
+  --blue:#2563EB;
+  --blue-light:#EFF6FF;
+  --green:#16A34A;
+  --green-light:#F0FDF4;
+  --red:#DC2626;
+  --red-light:#FEF2F2;
+  --orange:#D97706;
+  --orange-light:#FFFBEB;
+  --purple:#7C3AED;
+  --purple-light:#F5F3FF;
+  --text:#111827;
+  --muted:#6B7280;
+  --muted2:#9CA3AF;
+  --font:'Inter',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --shadow:0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,0.07),0 2px 4px -1px rgba(0,0,0,0.04);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden}
+
+.wrap{max-width:960px;margin:0 auto;padding:0 24px}
+
+/* ── HEADER ── */
+header{padding:52px 0 44px;text-align:center}
+.logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:24px}
+.logo-mark{width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.logo-name{font-size:20px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
+.logo-name span{color:var(--blue)}
+.logo-v{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;margin-left:6px}
+h1{font-size:clamp(26px,4vw,42px);font-weight:700;letter-spacing:-1px;line-height:1.1;margin-bottom:12px;color:var(--text)}
+h1 em{font-style:normal;color:var(--blue)}
+.tagline{font-size:14px;color:var(--muted);letter-spacing:0}
+
+/* ── MODE SWITCHER ── */
+.mode-bar{display:flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px;margin-bottom:28px;width:fit-content;margin-left:auto;margin-right:auto;box-shadow:var(--shadow)}
+.mode-btn{font-family:var(--font);font-size:13px;font-weight:500;padding:8px 20px;border-radius:6px;border:none;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:6px}
+.mode-btn.active{background:var(--blue);color:#fff;box-shadow:var(--shadow)}
+.mode-btn .dot{width:5px;height:5px;border-radius:50%}
+.mode-btn.active .dot{background:rgba(255,255,255,0.7)}
+.mode-btn:not(.active) .dot{background:var(--muted2)}
+
+/* ── PANELS ── */
+.panel{display:none}.panel.active{display:block}
+
+/* ── INPUT CARD ── */
+.input-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px 32px;margin-bottom:24px;box-shadow:var(--shadow)}
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:600px){.input-grid{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px}
+.field-label{font-size:12px;font-weight:600;color:var(--text);letter-spacing:0}
+input[type=url],input[type=text],textarea{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px 13px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;resize:none}
+input:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+input::placeholder,textarea::placeholder{color:var(--muted2);font-family:var(--mono)}
+.btn-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn-primary{background:var(--blue);border:none;border-radius:8px;padding:10px 24px;font-family:var(--font);font-size:14px;font-weight:600;color:#fff;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+.btn-primary:hover{opacity:.88}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.btn-ghost{background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px 18px;font-family:var(--font);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:border-color .15s,color .15s}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
+.examples{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
+.ex-label{font-size:12px;color:var(--muted)}
+.ex-pill{font-size:12px;color:var(--blue);background:var(--blue-light);border:1px solid #BFDBFE;border-radius:20px;padding:4px 12px;cursor:pointer;transition:background .15s}
+.ex-pill:hover{background:#DBEAFE}
+
+/* bulk upload area */
+.upload-area{border:1.5px dashed var(--border2);border-radius:8px;padding:28px;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:12px}
+.upload-area:hover,.upload-area.drag{border-color:var(--blue);background:var(--blue-light)}
+.upload-icon{font-size:24px;margin-bottom:8px;opacity:.5}
+.upload-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.upload-sub{font-size:12px;color:var(--muted)}
+#file-input{display:none}
+.url-textarea{min-height:120px;font-size:12px;line-height:1.8}
+.bulk-info{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.bulk-count{color:var(--blue);font-weight:600}
+
+/* ── LOADING ── */
+.loading{display:none;padding:56px 0;text-align:center}
+.loading.active{display:block}
+.spin-ring{width:40px;height:40px;border:2px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-status{font-size:14px;color:var(--muted);margin-top:4px}
+.load-url{font-family:var(--mono);font-size:12px;color:var(--blue);margin-top:6px;max-width:400px;margin-left:auto;margin-right:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* bulk progress */
+.bulk-progress{display:none;margin-top:20px;max-width:360px;margin-left:auto;margin-right:auto}
+.bulk-progress.active{display:block}
+.prog-bar-wrap{height:4px;background:var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px}
+.prog-bar-fill{height:100%;background:var(--blue);border-radius:10px;width:0;transition:width .4s ease}
+.prog-text{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+
+/* ── ERROR ── */
+.error-box{display:none;background:var(--red-light);border:1px solid #FECACA;border-radius:10px;padding:20px;margin-bottom:20px;text-align:center}
+.error-box.active{display:block}
+.error-box h3{color:var(--red);margin-bottom:6px;font-size:15px}
+.error-box p{font-size:13px;color:var(--muted)}
+
+/* ── RESULTS ── */
+.results{display:none;animation:fadeUp .35s ease forwards}
+.results.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── URL STATUS BAR ── */
+.url-bar{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.url-info{font-family:var(--mono);font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.url-info strong{color:var(--text);font-weight:600}
+.sbadge{font-size:12px;font-weight:500;padding:4px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.badge-live{background:var(--green-light);color:var(--green);border:1px solid #BBF7D0}
+.badge-miss{background:var(--red-light);color:var(--red);border:1px solid #FECACA}
+.badge-ok{background:var(--blue-light);color:var(--blue);border:1px solid #BFDBFE}
+
+/* ── KPI ROW ── */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+@media(max-width:700px){.kpi-row{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:440px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 16px;box-shadow:var(--shadow)}
+.kpi-accent,.kpi-green,.kpi-purple,.kpi-orange,.kpi-red{border:1px solid var(--border)}
+.kpi-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+.kpi-val{font-size:28px;font-weight:700;letter-spacing:-1px;line-height:1;color:var(--text)}
+.kpi-accent .kpi-val,.kpi-green .kpi-val,.kpi-purple .kpi-val,.kpi-orange .kpi-val,.kpi-red .kpi-val{color:var(--text)}
+.kpi-sub{font-size:11px;color:var(--muted2);margin-top:3px}
+
+/* ── RISK CARD ── */
+.risk-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:20px;box-shadow:var(--shadow)}
+.risk-dial{display:none}
+.risk-score-block{display:flex;align-items:center;gap:20px;margin-bottom:16px;flex-wrap:wrap}
+.risk-score-big{font-size:42px;font-weight:700;letter-spacing:-2px;color:var(--text);line-height:1}
+.risk-score-meta{display:flex;flex-direction:column;gap:4px}
+.risk-score-num{display:none}
+.risk-score-lbl{display:none}
+.risk-bar-wrap{height:6px;background:var(--border);border-radius:10px;overflow:hidden;margin-bottom:6px;max-width:280px}
+.risk-bar-fill{height:100%;border-radius:10px;width:0;transition:width 1s ease;background:var(--green)}
+.risk-details{flex:1;min-width:200px}
+.risk-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px}
+.risk-factors{display:flex;flex-direction:column;gap:8px}
+.risk-factor{display:flex;align-items:center;gap:10px;font-size:13px}
+.rf-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.rf-pass{background:var(--green)}
+.rf-warn{background:var(--orange)}
+.rf-fail{background:var(--red)}
+.rf-text{color:var(--muted)}
+.rf-val{margin-left:auto;font-weight:600;color:var(--text);font-family:var(--mono);font-size:12px}
+
+/* ── TABS ── */
+.tabs-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow)}
+.tabs-header{display:flex;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--surface)}
+.tab-btn{font-family:var(--font);font-size:12px;font-weight:500;letter-spacing:0;padding:12px 16px;border:none;cursor:pointer;background:transparent;color:var(--muted);transition:color .15s;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-btn:hover:not(.active){color:var(--text)}
+.tab-body{padding:24px}
+.tab-pane{display:none}.tab-pane.active{display:block}
+
+/* ── DATA ROWS ── */
+.drow{display:flex;align-items:flex-start;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:16px}
+.drow:last-child{border-bottom:none;padding-bottom:0}
+.drow:first-child{padding-top:0}
+.dk{font-size:13px;color:var(--muted);flex-shrink:0;padding-top:1px}
+.dv{font-size:13px;font-weight:600;text-align:right;word-break:break-all;max-width:65%;color:var(--text)}
+.dv-mono{font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:400}
+
+/* ── ANCHOR TYPE ── */
+.anchor-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:8px 0}
+.anchor-text{font-family:var(--mono);font-size:13px;color:var(--text);margin-bottom:10px;word-break:break-all}
+.anchor-type-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:4px 10px;border-radius:5px}
+.at-branded{background:var(--purple-light);color:var(--purple);border:1px solid #DDD6FE}
+.at-exact{background:var(--green-light);color:var(--green);border:1px solid #BBF7D0}
+.at-partial{background:var(--blue-light);color:var(--blue);border:1px solid #BFDBFE}
+.at-naked{background:var(--orange-light);color:var(--orange);border:1px solid #FDE68A}
+.at-generic{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+
+/* ── FOLLOW CHIP ── */
+.fchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:4px 10px;border-radius:5px}
+.fc-do{background:var(--green-light);color:var(--green);border:1px solid #BBF7D0}
+.fc-no{background:var(--orange-light);color:var(--orange);border:1px solid #FDE68A}
+.fc-ugc{background:var(--purple-light);color:var(--purple);border:1px solid #DDD6FE}
+.fc-sp{background:var(--red-light);color:var(--red);border:1px solid #FECACA}
+
+/* ── DOM PLACEMENT ── */
+.placement-viz{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:12px}
+.page-segments{display:flex;flex-direction:column;gap:4px}
+.seg{height:22px;border-radius:5px;background:var(--border);position:relative;display:flex;align-items:center;padding-left:12px;font-size:12px;color:var(--muted);transition:all .3s}
+.seg.highlight{background:#DBEAFE;border:1px solid #93C5FD;color:var(--blue);font-weight:600}
+.seg-label{position:absolute;right:10px;font-size:10px;font-family:var(--mono)}
+.placement-info{margin-top:12px;font-size:12px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+.pi-item{display:flex;align-items:center;gap:6px}
+.pi-dot{width:6px;height:6px;border-radius:50%;background:var(--blue)}
+
+/* ── OUTREACH PANEL ── */
+.outreach-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.outreach-grid{grid-template-columns:1fr}}
+.outreach-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px}
+.oc-icon{display:none}
+.oc-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.oc-body{font-size:13px;color:var(--muted);line-height:1.6}
+.oc-body strong{color:var(--text);font-weight:600}
+.outreach-template{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:20px;margin-top:16px;position:relative}
+.ot-label{font-size:11px;font-weight:600;color:var(--blue);letter-spacing:.3px;text-transform:uppercase;margin-bottom:12px}
+.ot-text{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.9;white-space:pre-wrap}
+.ot-text strong{color:var(--blue)}
+.btn-copy-tpl{position:absolute;top:14px;right:14px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;transition:color .15s,border-color .15s}
+.btn-copy-tpl:hover{color:var(--blue);border-color:var(--blue)}
+
+/* ── SIGNALS ── */
+.sig-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.sig-item{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.sig-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sig-pass{background:var(--green)}
+.sig-warn{background:var(--orange)}
+.sig-fail{background:var(--red)}
+.sig-label{font-size:13px;font-weight:600;color:var(--text)}
+.sig-sub{font-size:12px;color:var(--muted)}
+
+/* ── EXT LINKS LIST ── */
+.ext-list{display:flex;flex-direction:column;gap:6px}
+.ext-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;transition:border-color .15s}
+.ext-item:hover{border-color:var(--border2)}
+.ext-item.yours{border-color:#BBF7D0;background:var(--green-light)}
+.ext-num{font-family:var(--mono);font-size:10px;color:var(--muted2);background:var(--border);border-radius:4px;padding:2px 6px;flex-shrink:0;margin-top:2px}
+.ext-detail{flex:1;min-width:0}
+.ext-anchor{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.ext-href{font-family:var(--mono);font-size:11px;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ext-yours-tag{font-size:10px;font-weight:600;color:var(--green);margin-left:6px}
+
+/* ── BULK RESULTS TABLE ── */
+.bulk-table-wrap{overflow-x:auto;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:11px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--surface2)}
+td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.td-url{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-family:var(--mono);font-size:12px}
+.td-anchor{color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.td-status{white-space:nowrap}
+.td-risk{}
+
+/* ── EXPORT BAR ── */
+.export-bar{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap}
+.btn-exp{font-family:var(--font);font-size:13px;font-weight:500;padding:9px 18px;border-radius:7px;cursor:pointer;transition:opacity .15s;border:none;display:flex;align-items:center;gap:6px}
+.btn-green{background:var(--green-light);color:var(--green);border:1px solid #BBF7D0}
+.btn-green:hover{opacity:.8}
+.btn-cyan{background:var(--blue-light);color:var(--blue);border:1px solid #BFDBFE}
+.btn-cyan:hover{opacity:.8}
+.btn-reset{background:var(--surface);color:var(--muted);border:1px solid var(--border);margin-left:auto}
+.btn-reset:hover{color:var(--text)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);border-radius:8px;padding:11px 18px;font-size:13px;color:#fff;z-index:999;transform:translateY(8px);opacity:0;transition:all .25s;pointer-events:none;box-shadow:var(--shadow-md)}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--surface2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-mark">🔗</div>
+      <div class="logo-name">Link<span>Scope</span> <span class="logo-v">v2.0</span></div>
+    </div>
+    <h1>Backlink <em>Intelligence</em></h1>
+    <p class="tagline">Anchor classification · Risk scoring · DOM placement · Outreach insights · Bulk analysis</p>
+  </header>
+
+  <!-- MODE SWITCHER -->
+  <div class="mode-bar">
+    <button class="mode-btn active" onclick="switchMode('single',this)"><span class="dot"></span> Single URL</button>
+    <button class="mode-btn" onclick="switchMode('bulk',this)"><span class="dot"></span> Bulk Analyzer</button>
+  </div>
+
+  <!-- ══════════ SINGLE URL PANEL ══════════ -->
+  <div class="panel active" id="panel-single">
+
+    <div class="input-card">
+      <div class="input-grid">
+        <div class="field">
+          <label class="field-label" for="src-url">Source URL</label>
+          <input type="url" id="src-url" placeholder="https://example.com/blog-post" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="field-label" for="tgt-domain">Your Brand / Target Domain</label>
+          <input type="text" id="tgt-domain" placeholder="yoursite.com or brand name" spellcheck="false" autocomplete="off">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:16px">
+        <label class="field-label" for="kw-input">Target Keywords (comma separated — for anchor classification)</label>
+        <input type="text" id="kw-input" placeholder="seo tools, backlink checker, link building" spellcheck="false" autocomplete="off">
+      </div>
+      <div class="btn-row" style="margin-bottom:14px">
+        <button class="btn-primary" id="single-btn" onclick="runSingle()">Analyze →</button>
+        <button class="btn-ghost" onclick="resetSingle()">Clear</button>
+      </div>
+      <div class="examples">
+        <span class="ex-label">Try:</span>
+        <span class="ex-pill" onclick="fillEx('https://en.wikipedia.org/wiki/Search_engine_optimization','google.com','seo, search engine optimization')">Wikipedia SEO</span>
+        <span class="ex-pill" onclick="fillEx('https://developer.mozilla.org/en-US/docs/Web/HTML','example.com','html, web development')">MDN HTML</span>
+        <span class="ex-pill" onclick="fillEx('https://www.w3schools.com/css/default.asp','w3.org','css, stylesheet')">W3Schools CSS</span>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="loading" id="single-loading">
+      <div class="spin-ring"></div>
+      <div class="load-status" id="single-load-status">Fetching page...</div>
+      <div class="load-url" id="single-load-url"></div>
+    </div>
+
+    <!-- ERROR -->
+    <div class="error-box" id="single-error">
+      <h3>⚠ Couldn't fetch page</h3>
+      <p id="single-error-msg">CORS policy blocked this URL. Try a public page like Wikipedia.</p>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results" id="single-results">
+
+      <!-- URL BAR -->
+      <div class="url-bar">
+        <div class="url-info"><strong id="r-domain">—</strong> <span id="r-src-short"></span></div>
+        <div class="sbadge" id="r-status-badge">—</div>
+      </div>
+
+      <!-- KPI ROW -->
+      <div class="kpi-row">
+        <div class="kpi kpi-accent"><div class="kpi-lbl">Total Links</div><div class="kpi-val" id="k-total">0</div><div class="kpi-sub">on page</div></div>
+        <div class="kpi kpi-green"><div class="kpi-lbl">Your Links</div><div class="kpi-val" id="k-yours">0</div><div class="kpi-sub">to target</div></div>
+        <div class="kpi kpi-purple"><div class="kpi-lbl">Dofollow</div><div class="kpi-val" id="k-dofollow">0</div><div class="kpi-sub">passes juice</div></div>
+        <div class="kpi kpi-orange"><div class="kpi-lbl">Ext. Links</div><div class="kpi-val" id="k-ext">0</div><div class="kpi-sub">outbound</div></div>
+        <div class="kpi kpi-red"><div class="kpi-lbl">Risk Score</div><div class="kpi-val" id="k-risk">—</div><div class="kpi-sub">out of 100</div></div>
+      </div>
+
+      <!-- RISK CARD -->
+      <div class="risk-card" id="risk-card">
+        <div class="risk-score-block">
+          <div class="risk-score-big" id="risk-num">0</div>
+          <div class="risk-score-meta">
+            <div class="risk-title" id="risk-label">Calculating...</div>
+            <div class="risk-bar-wrap"><div class="risk-bar-fill" id="risk-arc"></div></div>
+            <div style="font-size:11px;color:var(--muted)">Risk score out of 100</div>
+          </div>
+        </div>
+        <div class="risk-details">
+          <div class="risk-factors" id="risk-factors"></div>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs-wrap">
+        <div class="tabs-header">
+          <button class="tab-btn active" onclick="switchTab('backlink',this)">BACKLINK DATA</button>
+          <button class="tab-btn" onclick="switchTab('anchor',this)">ANCHOR TYPE</button>
+          <button class="tab-btn" onclick="switchTab('placement',this)">DOM PLACEMENT</button>
+          <button class="tab-btn" onclick="switchTab('outreach',this)">OUTREACH INSIGHTS</button>
+          <button class="tab-btn" onclick="switchTab('signals',this)">SEO SIGNALS</button>
+          <button class="tab-btn" onclick="switchTab('extlinks',this)">ALL EXT. LINKS</button>
+          <button class="tab-btn" onclick="switchTab('meta',this)">PAGE META</button>
+        </div>
+        <div class="tab-body">
+
+          <!-- BACKLINK DATA -->
+          <div class="tab-pane active" id="tab-backlink">
+            <div class="drow"><span class="dk">Target Link Found</span><span class="dv" id="r-found">—</span></div>
+            <div class="drow"><span class="dk">Follow Type</span><span class="dv" id="r-follow">—</span></div>
+            <div class="drow"><span class="dk">Links to Your Domain</span><span class="dv" id="r-count">—</span></div>
+            <div class="drow"><span class="dk">Source Domain</span><span class="dv dv-mono" id="r-srcdomain">—</span></div>
+            <div class="drow"><span class="dk">Source URL</span><span class="dv dv-mono" id="r-srcurl" style="font-size:10px">—</span></div>
+          </div>
+
+          <!-- ANCHOR TYPE -->
+          <div class="tab-pane" id="tab-anchor">
+            <div style="margin-bottom:14px">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Detected anchor text</div>
+              <div class="anchor-box">
+                <div class="anchor-text" id="r-anchor-text">—</div>
+                <div id="r-anchor-badge">—</div>
+              </div>
+            </div>
+            <div class="drow"><span class="dk">Classification</span><span class="dv" id="r-anchor-type">—</span></div>
+            <div class="drow"><span class="dk">Why this matters</span><span class="dv" id="r-anchor-why" style="font-size:12px;font-weight:400;color:var(--muted2);text-align:right;max-width:65%">—</span></div>
+            <div class="drow"><span class="dk">Recommended ratio</span><span class="dv" id="r-anchor-rec" style="font-size:12px;font-weight:400;color:var(--muted2);text-align:right;max-width:65%">—</span></div>
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px">All anchor types on this page (your links)</div>
+              <div id="r-anchor-breakdown" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+            </div>
+          </div>
+
+          <!-- DOM PLACEMENT -->
+          <div class="tab-pane" id="tab-placement">
+            <div class="drow"><span class="dk">Page Section</span><span class="dv" id="r-section">—</span></div>
+            <div class="drow"><span class="dk">Position in Page</span><span class="dv" id="r-position">—</span></div>
+            <div class="drow"><span class="dk">Inside Element</span><span class="dv" id="r-element">—</span></div>
+            <div class="drow"><span class="dk">SEO Value</span><span class="dv" id="r-dom-seo">—</span></div>
+            <div class="placement-viz" id="placement-viz">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Page structure visualization</div>
+              <div class="page-segments" id="seg-list"></div>
+              <div class="placement-info" id="placement-info"></div>
+            </div>
+          </div>
+
+          <!-- OUTREACH INSIGHTS -->
+          <div class="tab-pane" id="tab-outreach">
+            <div class="outreach-grid" id="outreach-grid"></div>
+            <div class="outreach-template">
+              <div class="ot-label">✉ Suggested Outreach Template</div>
+              <button class="btn-copy-tpl" onclick="copyTemplate()">Copy</button>
+              <div class="ot-text" id="outreach-template">—</div>
+            </div>
+          </div>
+
+          <!-- SEO SIGNALS -->
+          <div class="tab-pane" id="tab-signals">
+            <div class="sig-grid" id="sig-grid"></div>
+          </div>
+
+          <!-- ALL EXT LINKS -->
+          <div class="tab-pane" id="tab-extlinks">
+            <div class="ext-list" id="ext-list"></div>
+          </div>
+
+          <!-- PAGE META -->
+          <div class="tab-pane" id="tab-meta">
+            <div class="drow"><span class="dk">Page Title</span><span class="dv" id="r-title" style="font-size:12px;font-weight:400;max-width:65%;text-align:right">—</span></div>
+            <div class="drow"><span class="dk">Meta Description</span><span class="dv" id="r-desc" style="font-size:11px;font-weight:400;color:var(--muted2);max-width:65%;text-align:right">—</span></div>
+            <div class="drow"><span class="dk">H1 Tag</span><span class="dv" id="r-h1" style="font-size:12px;max-width:65%;text-align:right">—</span></div>
+            <div class="drow"><span class="dk">Canonical URL</span><span class="dv dv-mono" id="r-canonical" style="font-size:10px;max-width:65%;text-align:right">—</span></div>
+            <div class="drow"><span class="dk">Robots Directive</span><span class="dv" id="r-robots">—</span></div>
+            <div class="drow"><span class="dk">OG Title</span><span class="dv" id="r-og" style="font-size:12px;max-width:65%;text-align:right">—</span></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- EXPORT BAR -->
+      <div class="export-bar">
+        <button class="btn-exp btn-green" onclick="exportSingleCSV()">⬇ Export CSV</button>
+        <button class="btn-exp btn-cyan" onclick="copySingleReport()">⎘ Copy Report</button>
+        <button class="btn-exp btn-reset" onclick="resetSingle()">← New Analysis</button>
+      </div>
+
+    </div><!-- /single results -->
+  </div><!-- /single panel -->
+
+
+  <!-- ══════════ BULK PANEL ══════════ -->
+  <div class="panel" id="panel-bulk">
+    <div class="input-card">
+      <div class="field" style="margin-bottom:12px">
+        <label class="field-label">Target Domain (applied to all URLs)</label>
+        <input type="text" id="bulk-target" placeholder="yoursite.com" spellcheck="false" autocomplete="off">
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label class="field-label">Target Keywords (comma separated)</label>
+        <input type="text" id="bulk-keywords" placeholder="seo tools, backlink checker" spellcheck="false" autocomplete="off">
+      </div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">Paste URLs (one per line) or upload CSV</div>
+
+      <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondrop="dropFile(event)" ondragleave="dragLeave(event)">
+        <div class="upload-icon">📂</div>
+        <div class="upload-title">Drop CSV file here or click to upload</div>
+        <div class="upload-sub">CSV with a "url" column · max 50 URLs</div>
+      </div>
+      <input type="file" id="file-input" accept=".csv" onchange="handleCSV(event)">
+
+      <div style="text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted);margin:8px 0">— or paste URLs manually —</div>
+
+      <textarea class="url-textarea" id="bulk-urls" placeholder="https://site1.com/page&#10;https://site2.com/blog&#10;https://site3.com/article&#10;(up to 50 URLs, one per line)"></textarea>
+
+      <div class="bulk-info" style="margin:10px 0">
+        URLs loaded: <span class="bulk-count" id="bulk-url-count">0</span>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="bulk-btn" onclick="runBulk()">Run Bulk Analysis →</button>
+        <button class="btn-ghost" onclick="resetBulk()">Clear</button>
+      </div>
+    </div>
+
+    <!-- BULK LOADING -->
+    <div class="loading" id="bulk-loading">
+      <div class="spin-ring"></div>
+      <div class="load-status" id="bulk-load-status">Starting analysis...</div>
+      <div class="load-url" id="bulk-load-url"></div>
+      <div class="bulk-progress active" id="bulk-prog">
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" id="prog-fill"></div></div>
+        <div class="prog-text"><span id="prog-done">0 done</span><span id="prog-total">of 0</span></div>
+      </div>
+    </div>
+
+    <!-- BULK ERROR -->
+    <div class="error-box" id="bulk-error">
+      <h3>⚠ Analysis Error</h3>
+      <p id="bulk-error-msg">Please enter at least one valid URL.</p>
+    </div>
+
+    <!-- BULK RESULTS -->
+    <div class="results" id="bulk-results">
+      <div class="tabs-wrap">
+        <div class="tabs-header">
+          <button class="tab-btn active" onclick="switchBulkTab('table',this)">RESULTS TABLE</button>
+          <button class="tab-btn" onclick="switchBulkTab('summary',this)">SUMMARY</button>
+        </div>
+        <div class="tab-body">
+          <div class="tab-pane active" id="btab-table">
+            <div class="bulk-table-wrap">
+              <table id="bulk-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Source URL</th>
+                    <th>Anchor Text</th>
+                    <th>Anchor Type</th>
+                    <th>Follow</th>
+                    <th>Placement</th>
+                    <th>Risk Score</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="bulk-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-pane" id="btab-summary">
+            <div class="kpi-row" id="bulk-kpi-row" style="margin-bottom:20px"></div>
+            <div class="sig-grid" id="bulk-sig-grid"></div>
+          </div>
+        </div>
+      </div>
+      <div class="export-bar">
+        <button class="btn-exp btn-green" onclick="exportBulkCSV()">⬇ Export All as CSV</button>
+        <button class="btn-exp btn-reset" onclick="resetBulk()">← New Bulk Analysis</button>
+      </div>
+    </div>
+
+  </div><!-- /bulk panel -->
+
+</div><!-- /wrap -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════
+// GLOBALS
+// ══════════════════════════════════
+let singleData = {};
+let bulkResults = [];
+
+// ══════════════════════════════════
+// UTILS
+// ══════════════════════════════════
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function animCount(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  let n = 0;
+  const step = Math.max(1, Math.floor(target / 25));
+  const t = setInterval(() => { n = Math.min(n + step, target); el.textContent = n; if (n >= target) clearInterval(t); }, 30);
+}
+
+function switchMode(mode, btn) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + mode).classList.add('active');
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => { if(b.closest('.tabs-wrap') === btn.closest('.tabs-wrap')) b.classList.remove('active'); });
+  document.querySelectorAll('.tab-pane').forEach(p => { if(p.closest('.tabs-wrap') === btn.closest('.tabs-wrap')) p.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function switchBulkTab(name, btn) {
+  document.querySelectorAll('#panel-bulk .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#panel-bulk .tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('btab-' + name).classList.add('active');
+}
+
+// ══════════════════════════════════
+// FETCH & PARSE
+// ══════════════════════════════════
+async function fetchPage(url) {
+  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+  const res = await fetch(proxy, { signal: AbortSignal.timeout(12000) });
+  if (!res.ok) throw new Error('Proxy error');
+  const json = await res.json();
+  if (!json.contents) throw new Error('Empty response');
+  return json.contents;
+}
+
+function parsePage(html, sourceUrl, targetDomain, keywords) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const srcObj = new URL(sourceUrl);
+  const srcHost = srcObj.hostname;
+  const tgtClean = targetDomain.replace(/^https?:\/\//, '').replace(/\/.*$/, '').toLowerCase().replace(/^www\./, '');
+  const kws = keywords.split(',').map(k => k.trim().toLowerCase()).filter(Boolean);
+
+  // Meta
+  const title = doc.title || '—';
+  const metaDesc = doc.querySelector('meta[name="description"]')?.content || '—';
+  const canonical = doc.querySelector('link[rel="canonical"]')?.href || '—';
+  const h1 = doc.querySelector('h1')?.textContent?.trim() || '—';
+  const robots = doc.querySelector('meta[name="robots"]')?.content || 'index, follow (default)';
+  const ogTitle = doc.querySelector('meta[property="og:title"]')?.content || '—';
+
+  // Links
+  const allLinks = Array.from(doc.querySelectorAll('a[href]'));
+  const extLinks = allLinks.filter(a => {
+    try {
+      const h = a.getAttribute('href');
+      if (!h || h.startsWith('#') || h.startsWith('javascript:') || h.startsWith('mailto:')) return false;
+      const u = new URL(h, sourceUrl);
+      return u.hostname !== srcHost;
+    } catch { return false; }
+  });
+
+  const targetLinks = tgtClean ? extLinks.filter(a => {
+    try { return new URL(a.getAttribute('href'), sourceUrl).hostname.replace(/^www\./, '').includes(tgtClean); }
+    catch { return false; }
+  }) : [];
+
+  const dofollow = extLinks.filter(a => {
+    const r = a.getAttribute('rel') || '';
+    return !r.includes('nofollow') && !r.includes('ugc') && !r.includes('sponsored');
+  }).length;
+
+  const headings = doc.querySelectorAll('h1,h2,h3,h4,h5,h6').length;
+
+  // First target link
+  let anchorText = '—', followType = 'unknown', followChip = 'fc-do';
+  let domSection = '—', domElement = '—', domPosition = '—', domPct = 50;
+  let domSeoValue = '—';
+
+  if (targetLinks.length > 0) {
+    const lk = targetLinks[0];
+    anchorText = lk.textContent?.trim() || lk.getAttribute('href') || '—';
+
+    const rel = (lk.getAttribute('rel') || '').toLowerCase();
+    if (rel.includes('sponsored')) { followType = 'Sponsored'; followChip = 'fc-sp'; }
+    else if (rel.includes('ugc')) { followType = 'UGC'; followChip = 'fc-ugc'; }
+    else if (rel.includes('nofollow')) { followType = 'Nofollow'; followChip = 'fc-no'; }
+    else { followType = 'Dofollow'; followChip = 'fc-do'; }
+
+    // DOM placement via parent element
+    let el = lk;
+    let inHeader = false, inFooter = false, inNav = false, inMain = false, inAside = false, inArticle = false;
+    while (el && el !== doc.body) {
+      const tag = el.tagName?.toLowerCase();
+      if (tag === 'header') inHeader = true;
+      if (tag === 'footer') inFooter = true;
+      if (tag === 'nav') inNav = true;
+      if (tag === 'main' || tag === 'article') inMain = true;
+      if (tag === 'article') inArticle = true;
+      if (tag === 'aside') inAside = true;
+      el = el.parentElement;
+    }
+
+    domElement = lk.parentElement?.tagName?.toLowerCase() || 'unknown';
+
+    if (inHeader || inNav) { domSection = 'Header / Navigation'; domSeoValue = 'Site-wide — lower contextual weight'; }
+    else if (inFooter) { domSection = 'Footer'; domSeoValue = 'Site-wide footer — minimal SEO value'; }
+    else if (inAside) { domSection = 'Sidebar'; domSeoValue = 'Sidebar — moderate value'; }
+    else if (inArticle) { domSection = 'Article Body'; domSeoValue = 'Editorial body — highest SEO value ✓'; }
+    else if (inMain) { domSection = 'Main Content'; domSeoValue = 'Main content area — high value ✓'; }
+    else { domSection = 'Page Body'; domSeoValue = 'Body content — moderate value'; }
+
+    // position estimate from HTML offset
+    const linkHref = lk.getAttribute('href') || '';
+    const idx = html.indexOf(linkHref);
+    domPct = idx > 0 ? Math.min(Math.round((idx / html.length) * 100), 99) : 50;
+    domPosition = domPct < 25 ? 'Top of page (0–25%)' : domPct < 50 ? 'Upper-middle (25–50%)' : domPct < 75 ? 'Lower-middle (50–75%)' : 'Bottom of page (75–100%)';
+  }
+
+  // Anchor classification
+  const anchorClass = classifyAnchor(anchorText, tgtClean, kws);
+
+  // Risk score
+  const risk = calcRisk({ targetLinks, followType, anchorText, anchorClass, extLinks, domSection, metaDesc, robots });
+
+  // All target link anchor types
+  const anchorBreakdown = {};
+  targetLinks.forEach(lk => {
+    const txt = lk.textContent?.trim() || lk.getAttribute('href') || '';
+    const cls = classifyAnchor(txt, tgtClean, kws).type;
+    anchorBreakdown[cls] = (anchorBreakdown[cls] || 0) + 1;
+  });
+
+  return {
+    sourceUrl, targetDomain: tgtClean, srcHost, title, metaDesc, canonical, h1, robots, ogTitle,
+    totalLinks: allLinks.length, extLinks: extLinks.length, targetLinks: targetLinks.length,
+    dofollow, headings, anchorText, followType, followChip,
+    anchorClass, domSection, domElement, domPosition, domPct, domSeoValue,
+    risk, anchorBreakdown,
+    extLinksData: extLinks.slice(0, 40).map(a => {
+      const rel = a.getAttribute('rel') || '';
+      let ft = 'dofollow';
+      if (rel.includes('nofollow')) ft = 'nofollow';
+      else if (rel.includes('ugc')) ft = 'ugc';
+      else if (rel.includes('sponsored')) ft = 'sponsored';
+      let href = '';
+      try { href = new URL(a.getAttribute('href'), sourceUrl).href; } catch { href = a.getAttribute('href') || ''; }
+      const isYours = tgtClean && href.toLowerCase().includes(tgtClean);
+      return { anchor: a.textContent?.trim() || '(no text)', href, ft, isYours };
+    })
+  };
+}
+
+// ══════════════════════════════════
+// ANCHOR CLASSIFICATION
+// ══════════════════════════════════
+function classifyAnchor(text, brand, keywords) {
+  if (!text || text === '—') return { type: 'Unknown', cls: 'at-generic', why: 'No anchor detected.', rec: '—' };
+  const t = text.toLowerCase().trim();
+  const urlPattern = /^https?:\/\/|^www\./;
+  const genericTerms = ['click here','read more','learn more','here','this','visit','link','website','page','article','source','more','view','see more'];
+
+  if (urlPattern.test(t)) return {
+    type: 'Naked URL', cls: 'at-naked',
+    why: 'Anchor is a raw URL. Natural but passes no keyword relevance.',
+    rec: 'Keep at 10–20% of your anchor profile for naturalness.'
+  };
+  if (genericTerms.some(g => t === g)) return {
+    type: 'Generic', cls: 'at-generic',
+    why: 'Generic anchors are natural but pass no keyword signals to Google.',
+    rec: 'Keep under 20% of your anchor profile.'
+  };
+  if (brand && t.includes(brand.replace(/\.(com|org|net|io)/, ''))) return {
+    type: 'Branded', cls: 'at-branded',
+    why: 'Branded anchors build brand authority. Safest anchor type for Google.',
+    rec: 'Aim for 40–60% branded anchors in a healthy profile.'
+  };
+  if (keywords.length > 0) {
+    const exact = keywords.find(k => t === k);
+    if (exact) return {
+      type: 'Exact Match', cls: 'at-exact',
+      why: 'Exact match anchors are powerful but risky if overused — Google flags unnatural patterns.',
+      rec: 'Keep exact match under 5% of your total anchor profile.'
+    };
+    const partial = keywords.find(k => t.includes(k) || k.includes(t));
+    if (partial) return {
+      type: 'Partial Match', cls: 'at-partial',
+      why: 'Partial match anchors provide keyword relevance with lower risk than exact match.',
+      rec: 'Partial match can make up 15–25% of your anchor profile safely.'
+    };
+  }
+  return {
+    type: 'Natural / LSI', cls: 'at-partial',
+    why: 'Natural language anchor — contextually relevant and preferred by Google.',
+    rec: 'Natural anchors are ideal. Aim for 30–40% of your profile.'
+  };
+}
+
+// ══════════════════════════════════
+// RISK SCORE
+// ══════════════════════════════════
+function calcRisk({ targetLinks, followType, anchorText, anchorClass, extLinks, domSection, metaDesc, robots }) {
+  let score = 0;
+  const factors = [];
+
+  // Nofollow / sponsored
+  if (followType === 'Nofollow') {
+    score += 15;
+    factors.push({ label: 'Nofollow link', val: '+15', status: 'warn', note: 'Passes no PageRank' });
+  } else if (followType === 'Sponsored') {
+    score += 25;
+    factors.push({ label: 'Sponsored link', val: '+25', status: 'fail', note: 'Must be disclosed' });
+  } else if (followType === 'UGC') {
+    score += 10;
+    factors.push({ label: 'UGC link', val: '+10', status: 'warn', note: 'User-generated content' });
+  } else {
+    factors.push({ label: 'Dofollow link', val: '0', status: 'pass', note: 'Passes SEO value ✓' });
+  }
+
+  // Link dilution (too many ext links)
+  const extCount = extLinks.length;
+  if (extCount > 200) {
+    score += 20; factors.push({ label: 'High link dilution', val: '+20', status: 'fail', note: `${extCount} ext links on page` });
+  } else if (extCount > 80) {
+    score += 10; factors.push({ label: 'Moderate link dilution', val: '+10', status: 'warn', note: `${extCount} ext links on page` });
+  } else {
+    factors.push({ label: 'Low link dilution', val: '0', status: 'pass', note: `${extCount} ext links — healthy` });
+  }
+
+  // Anchor type risk
+  if (anchorClass.type === 'Exact Match') {
+    score += 20; factors.push({ label: 'Exact match anchor', val: '+20', status: 'warn', note: 'Risky if overused' });
+  } else if (anchorClass.type === 'Sponsored' || anchorClass.type === 'Generic') {
+    score += 5; factors.push({ label: `${anchorClass.type} anchor`, val: '+5', status: 'warn', note: 'Low relevance signal' });
+  } else {
+    factors.push({ label: `${anchorClass.type} anchor`, val: '0', status: 'pass', note: 'Natural anchor ✓' });
+  }
+
+  // DOM placement
+  if (domSection.includes('Footer') || domSection.includes('Navigation')) {
+    score += 15; factors.push({ label: 'Site-wide placement', val: '+15', status: 'warn', note: 'Header/footer links devalued' });
+  } else if (domSection.includes('Article') || domSection.includes('Main')) {
+    factors.push({ label: 'Editorial placement', val: '0', status: 'pass', note: 'Best placement ✓' });
+  } else {
+    score += 5; factors.push({ label: 'Sidebar/body placement', val: '+5', status: 'warn', note: 'Moderate placement' });
+  }
+
+  // No target link found
+  if (targetLinks.length === 0) {
+    score += 10; factors.push({ label: 'No link to target', val: '+10', status: 'fail', note: 'Link not detected on page' });
+  } else {
+    factors.push({ label: 'Link confirmed live', val: '0', status: 'pass', note: 'Link exists on page ✓' });
+  }
+
+  // Robots
+  if (robots.includes('noindex')) {
+    score += 20; factors.push({ label: 'Page is noindexed', val: '+20', status: 'fail', note: 'Google ignores this page' });
+  } else {
+    factors.push({ label: 'Page is indexable', val: '0', status: 'pass', note: 'Google can index ✓' });
+  }
+
+  score = Math.min(score, 100);
+  let label, color;
+  if (score <= 20) { label = '🟢 Low Risk — Strong backlink'; color = '#00F5A0'; }
+  else if (score <= 45) { label = '🟡 Moderate Risk — Review signals'; color = '#FF9F1C'; }
+  else if (score <= 70) { label = '🟠 High Risk — Action needed'; color = '#FF9F1C'; }
+  else { label = '🔴 Critical Risk — Consider disavow'; color = '#FF4560'; }
+
+  return { score, label, color, factors };
+}
+
+// ══════════════════════════════════
+// OUTREACH GENERATION
+// ══════════════════════════════════
+function genOutreach(data) {
+  const domain = data.srcHost.replace('www.', '');
+  const hasLink = data.targetLinks > 0;
+  const isNofollow = data.followType === 'Nofollow';
+  const isFooter = data.domSection?.includes('Footer') || data.domSection?.includes('Navigation');
+
+  const cards = [];
+
+  if (!hasLink) {
+    cards.push({ icon: '🎯', title: 'Opportunity Type', body: `<strong>Link Reclamation / New Outreach</strong><br>This page doesn't currently link to you. It mentions your niche — pitch for an editorial mention.` });
+  } else if (isNofollow) {
+    cards.push({ icon: '🔄', title: 'Opportunity Type', body: `<strong>Nofollow → Dofollow Upgrade</strong><br>A link exists but it's nofollow. Reach out to request an editorial upgrade to a dofollow link.` });
+  } else if (isFooter) {
+    cards.push({ icon: '📍', title: 'Opportunity Type', body: `<strong>Placement Upgrade</strong><br>Link is in a sitewide footer. Request moving it into a relevant content section for better SEO value.` });
+  } else {
+    cards.push({ icon: '✅', title: 'Opportunity Type', body: `<strong>Strong Backlink — Monitor</strong><br>This is a healthy editorial backlink. Monitor it monthly to ensure it stays live and dofollow.` });
+  }
+
+  cards.push({ icon: '📊', title: 'Risk Assessment', body: `Risk Score: <strong>${data.risk.score}/100</strong><br>${data.risk.label}` });
+  cards.push({ icon: '⚓', title: 'Anchor Advice', body: `Current: <strong>${data.anchorClass.type}</strong><br>${data.anchorClass.rec}` });
+  cards.push({ icon: '📅', title: 'Follow-up Timing', body: `Send initial outreach → wait <strong>5 business days</strong> → send one follow-up. Do not send more than 2 emails.` });
+
+  const tpl = hasLink && !isNofollow
+    ? `Subject: Quick question about the link on ${domain}
+
+Hi [Name],
+
+I noticed you've linked to [your page] from your article on ${domain} — thank you for the mention!
+
+I wanted to reach out to say I'd love to contribute more value to your readers. I have a few resources that might complement your content well:
+
+→ [Resource 1]
+→ [Resource 2]
+
+Would any of these be a good fit to reference?
+
+Either way, thanks for the link — really appreciate it.
+
+Best,
+[Your Name]`
+    : `Subject: Resource suggestion for your ${domain} article
+
+Hi [Name],
+
+I came across your article at ${data.sourceUrl.substring(0, 60)}... and really enjoyed it.
+
+I noticed you link to several resources on this topic. I've published a guide that your readers might find genuinely useful:
+
+→ [Your Page URL] — [One-line description]
+
+Would you consider adding it as a reference? Happy to return the favour in any way.
+
+Thanks for your time,
+[Your Name]`;
+
+  return { cards, tpl };
+}
+
+// ══════════════════════════════════
+// SINGLE ANALYSIS
+// ══════════════════════════════════
+function fillEx(src, tgt, kw) {
+  document.getElementById('src-url').value = src;
+  document.getElementById('tgt-domain').value = tgt;
+  document.getElementById('kw-input').value = kw;
+}
+
+function resetSingle() {
+  ['single-loading','single-error','single-results'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('active');
+    if (el.classList.contains('results')) el.style.display = 'none';
+  });
+  document.getElementById('single-results').classList.remove('active');
+  document.getElementById('single-btn').disabled = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function runSingle() {
+  const url = document.getElementById('src-url').value.trim();
+  const target = document.getElementById('tgt-domain').value.trim();
+  const kw = document.getElementById('kw-input').value.trim();
+
+  if (!url) { toast('Please enter a source URL'); return; }
+
+  document.getElementById('single-error').classList.remove('active');
+  document.getElementById('single-results').classList.remove('active');
+  document.getElementById('single-loading').classList.add('active');
+  document.getElementById('single-btn').disabled = true;
+  document.getElementById('single-load-url').textContent = url.substring(0, 60) + (url.length > 60 ? '…' : '');
+
+  const statuses = ['Fetching page...', 'Parsing HTML...', 'Classifying anchors...', 'Calculating risk score...', 'Building outreach insights...'];
+  let si = 0;
+  const statusInterval = setInterval(() => {
+    if (si < statuses.length) { document.getElementById('single-load-status').textContent = statuses[si++]; }
+  }, 700);
+
+  try {
+    const html = await fetchPage(url);
+    clearInterval(statusInterval);
+    const data = parsePage(html, url, target, kw);
+    singleData = data;
+    document.getElementById('single-loading').classList.remove('active');
+    renderSingle(data);
+  } catch (err) {
+    clearInterval(statusInterval);
+    document.getElementById('single-loading').classList.remove('active');
+    document.getElementById('single-error-msg').textContent = 'Could not fetch: ' + (err.message || 'CORS or network issue. Try a public URL like Wikipedia.');
+    document.getElementById('single-error').classList.add('active');
+    document.getElementById('single-btn').disabled = false;
+  }
+}
+
+function renderSingle(d) {
+  // URL bar
+  document.getElementById('r-domain').textContent = d.srcHost.replace('www.', '');
+  document.getElementById('r-src-short').textContent = '· ' + d.sourceUrl.replace(/^https?:\/\//, '').substring(0, 55) + (d.sourceUrl.length > 60 ? '…' : '');
+  const badge = document.getElementById('r-status-badge');
+  if (d.targetLinks > 0) { badge.textContent = '✓ Backlink Confirmed'; badge.className = 'sbadge badge-live'; }
+  else if (!d.targetDomain) { badge.textContent = '⊕ Page Fetched'; badge.className = 'sbadge badge-ok'; }
+  else { badge.textContent = '✗ No Link Found'; badge.className = 'sbadge badge-miss'; }
+
+  // KPIs
+  animCount('k-total', d.totalLinks);
+  animCount('k-yours', d.targetLinks);
+  animCount('k-dofollow', d.dofollow);
+  animCount('k-ext', d.extLinks);
+  setTimeout(() => animCount('k-risk', d.risk.score), 300);
+
+  // Risk bar
+  setTimeout(() => {
+    const bar = document.getElementById('risk-arc');
+    bar.style.width = d.risk.score + '%';
+    bar.style.background = d.risk.score <= 20 ? '#16A34A' : d.risk.score <= 45 ? '#D97706' : '#DC2626';
+    animCount('risk-num', d.risk.score);
+  }, 300);
+  document.getElementById('risk-label').textContent = d.risk.label;
+  document.getElementById('risk-factors').innerHTML = d.risk.factors.map(f => `
+    <div class="risk-factor">
+      <div class="rf-dot rf-${f.status}"></div>
+      <span class="rf-text">${f.label} <span style="color:var(--muted);font-size:10px">(${f.note})</span></span>
+      <span class="rf-val" style="color:${f.status==='pass'?'var(--green)':f.status==='warn'?'var(--orange)':'var(--red)'}">${f.val}</span>
+    </div>`).join('');
+
+  // Backlink tab
+  document.getElementById('r-found').innerHTML = d.targetLinks > 0
+    ? `<span style="color:var(--green)">✓ Yes (${d.targetLinks} link${d.targetLinks > 1 ? 's' : ''})</span>`
+    : d.targetDomain ? `<span style="color:var(--red)">✗ Not found</span>` : '<span style="color:var(--muted2)">No target entered</span>';
+  document.getElementById('r-follow').innerHTML = d.targetLinks > 0 ? `<span class="fchip ${d.followChip}">${d.followType}</span>` : '—';
+  document.getElementById('r-count').textContent = d.targetLinks > 0 ? `${d.targetLinks} link${d.targetLinks > 1 ? 's' : ''} found` : '0';
+  document.getElementById('r-srcdomain').textContent = d.srcHost;
+  document.getElementById('r-srcurl').textContent = d.sourceUrl;
+
+  // Anchor tab
+  document.getElementById('r-anchor-text').textContent = d.anchorText;
+  document.getElementById('r-anchor-badge').innerHTML = `<span class="anchor-type-badge ${d.anchorClass.cls}">${d.anchorClass.type}</span>`;
+  document.getElementById('r-anchor-type').innerHTML = `<span class="anchor-type-badge ${d.anchorClass.cls}">${d.anchorClass.type}</span>`;
+  document.getElementById('r-anchor-why').textContent = d.anchorClass.why;
+  document.getElementById('r-anchor-rec').textContent = d.anchorClass.rec;
+
+  const breakdownEl = document.getElementById('r-anchor-breakdown');
+  if (Object.keys(d.anchorBreakdown).length > 0) {
+    breakdownEl.innerHTML = Object.entries(d.anchorBreakdown).map(([type, count]) => {
+      const cls = ['Branded','at-branded','Exact Match','at-exact','Partial Match','at-partial','Naked URL','at-naked'];
+      const map = { 'Branded': 'at-branded', 'Exact Match': 'at-exact', 'Partial Match': 'at-partial', 'Naked URL': 'at-naked', 'Generic': 'at-generic', 'Natural / LSI': 'at-partial', 'Unknown': 'at-generic' };
+      return `<span class="anchor-type-badge ${map[type] || 'at-generic'}">${type}: ${count}</span>`;
+    }).join('');
+  } else {
+    breakdownEl.innerHTML = '<span style="font-size:12px;color:var(--muted)">No target links found to classify</span>';
+  }
+
+  // DOM Placement tab
+  document.getElementById('r-section').textContent = d.domSection;
+  document.getElementById('r-position').textContent = d.domPosition;
+  document.getElementById('r-element').innerHTML = `<code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:12px;color:var(--blue);border:1px solid var(--border)">&lt;${d.domElement}&gt;</code>`;
+  document.getElementById('r-dom-seo').textContent = d.domSeoValue;
+
+  const segments = [
+    { label: '&lt;header&gt; / nav', zone: 'header', pct: 10 },
+    { label: '&lt;h1&gt; / intro', zone: 'intro', pct: 25 },
+    { label: 'Content body (best)', zone: 'body', pct: 60 },
+    { label: '&lt;footer&gt;', zone: 'footer', pct: 90 }
+  ];
+  const linkPct = d.domPct;
+  document.getElementById('seg-list').innerHTML = segments.map(s => {
+    const isHere = Math.abs(s.pct - linkPct) < 20;
+    return `<div class="seg ${isHere ? 'highlight' : ''}">${s.label}<span class="seg-label">${s.pct}%</span></div>`;
+  }).join('');
+  document.getElementById('placement-info').innerHTML = `
+    <div class="pi-item"><div class="pi-dot"></div> Link at ~${d.domPct}% through page</div>
+    <div class="pi-item"><div class="pi-dot" style="background:var(--green)"></div> ${d.domSeoValue}</div>`;
+
+  // Outreach tab
+  const outreach = genOutreach(d);
+  document.getElementById('outreach-grid').innerHTML = outreach.cards.map(c => `
+    <div class="outreach-card">
+      <div class="oc-icon">${c.icon}</div>
+      <div class="oc-title">${c.title}</div>
+      <div class="oc-body">${c.body}</div>
+    </div>`).join('');
+  document.getElementById('outreach-template').textContent = outreach.tpl;
+
+  // SEO Signals tab
+  const signals = [
+    { label: 'H1 Tag', sub: d.h1 !== '—' ? d.h1.substring(0,28) + (d.h1.length > 28 ? '…' : '') : 'Missing', status: d.h1 !== '—' ? 'pass' : 'fail' },
+    { label: 'Meta Description', sub: d.metaDesc !== '—' ? 'Present' : 'Missing', status: d.metaDesc !== '—' ? 'pass' : 'warn' },
+    { label: 'Canonical Tag', sub: d.canonical !== '—' ? 'Set' : 'Not set', status: d.canonical !== '—' ? 'pass' : 'warn' },
+    { label: 'OG Tags', sub: d.ogTitle !== '—' ? 'Configured' : 'Missing', status: d.ogTitle !== '—' ? 'pass' : 'warn' },
+    { label: 'Robots Directive', sub: d.robots.substring(0,22), status: d.robots.includes('noindex') ? 'fail' : 'pass' },
+    { label: 'Link Dilution', sub: d.extLinks + ' external links', status: d.extLinks < 80 ? 'pass' : d.extLinks < 200 ? 'warn' : 'fail' },
+    { label: 'Target Link Live', sub: d.targetLinks > 0 ? 'Confirmed' : 'Not found', status: d.targetLinks > 0 ? 'pass' : 'fail' },
+    { label: 'Follow Type', sub: d.followType, status: d.followType === 'Dofollow' ? 'pass' : d.followType === 'Nofollow' ? 'warn' : 'fail' },
+  ];
+  document.getElementById('sig-grid').innerHTML = signals.map(s => `
+    <div class="sig-item">
+      <div class="sig-dot sig-${s.status}"></div>
+      <div><div class="sig-label">${s.label}</div><div class="sig-sub">${s.sub}</div></div>
+    </div>`).join('');
+
+  // Ext links tab
+  document.getElementById('ext-list').innerHTML = d.extLinksData.length
+    ? d.extLinksData.map((l, i) => {
+        const chipMap = { dofollow: 'fc-do', nofollow: 'fc-no', ugc: 'fc-ugc', sponsored: 'fc-sp' };
+        return `<div class="ext-item ${l.isYours ? 'yours' : ''}">
+          <span class="ext-num">${String(i+1).padStart(2,'0')}</span>
+          <div class="ext-detail">
+            <div class="ext-anchor">${l.anchor || '(no text)'}${l.isYours ? '<span class="ext-yours-tag">← YOUR LINK</span>' : ''}</div>
+            <div class="ext-href">${l.href.substring(0,80)}${l.href.length > 80 ? '…' : ''}</div>
+          </div>
+          <span class="fchip ${chipMap[l.ft] || 'fc-do'}" style="font-size:9px;padding:3px 8px">${l.ft}</span>
+        </div>`;
+      }).join('')
+    : '<div style="font-size:13px;color:var(--muted);text-align:center;padding:20px">No external links found</div>';
+
+  // Meta tab
+  document.getElementById('r-title').textContent = d.title;
+  document.getElementById('r-desc').textContent = d.metaDesc;
+  document.getElementById('r-h1').textContent = d.h1;
+  document.getElementById('r-canonical').textContent = d.canonical;
+  document.getElementById('r-robots').textContent = d.robots;
+  document.getElementById('r-og').textContent = d.ogTitle;
+
+  document.getElementById('single-results').classList.add('active');
+  document.getElementById('single-btn').disabled = false;
+  setTimeout(() => document.getElementById('single-results').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+// ══════════════════════════════════
+// BULK ANALYSIS
+// ══════════════════════════════════
+document.getElementById('bulk-urls').addEventListener('input', updateBulkCount);
+
+function updateBulkCount() {
+  const urls = getBulkURLs();
+  document.getElementById('bulk-url-count').textContent = urls.length;
+}
+
+function getBulkURLs() {
+  return document.getElementById('bulk-urls').value
+    .split('\n').map(u => u.trim()).filter(u => u.startsWith('http'));
+}
+
+function dragOver(e) { e.preventDefault(); document.getElementById('upload-area').classList.add('drag'); }
+function dragLeave() { document.getElementById('upload-area').classList.remove('drag'); }
+function dropFile(e) { e.preventDefault(); dragLeave(); if (e.dataTransfer.files[0]) processCSVFile(e.dataTransfer.files[0]); }
+function handleCSV(e) { if (e.target.files[0]) processCSVFile(e.target.files[0]); }
+
+function processCSVFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    const lines = text.split('\n');
+    const header = lines[0].toLowerCase();
+    const urlColIdx = header.split(',').findIndex(h => h.trim().includes('url'));
+    const urls = lines.slice(1).map(l => {
+      const cols = l.split(',');
+      return urlColIdx >= 0 ? cols[urlColIdx]?.trim().replace(/"/g,'') : cols[0]?.trim().replace(/"/g,'');
+    }).filter(u => u && u.startsWith('http')).slice(0, 50);
+    document.getElementById('bulk-urls').value = urls.join('\n');
+    updateBulkCount();
+    toast(`✓ Loaded ${urls.length} URLs from CSV`);
+  };
+  reader.readAsText(file);
+}
+
+function resetBulk() {
+  document.getElementById('bulk-urls').value = '';
+  document.getElementById('bulk-target').value = '';
+  document.getElementById('bulk-keywords').value = '';
+  document.getElementById('bulk-error').classList.remove('active');
+  document.getElementById('bulk-results').classList.remove('active');
+  document.getElementById('bulk-loading').classList.remove('active');
+  document.getElementById('bulk-btn').disabled = false;
+  updateBulkCount();
+  bulkResults = [];
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function runBulk() {
+  const urls = getBulkURLs().slice(0, 50);
+  const target = document.getElementById('bulk-target').value.trim();
+  const kw = document.getElementById('bulk-keywords').value.trim();
+
+  if (urls.length === 0) {
+    document.getElementById('bulk-error-msg').textContent = 'Please enter at least one valid URL starting with http.';
+    document.getElementById('bulk-error').classList.add('active');
+    return;
+  }
+
+  document.getElementById('bulk-error').classList.remove('active');
+  document.getElementById('bulk-results').classList.remove('active');
+  document.getElementById('bulk-loading').classList.add('active');
+  document.getElementById('bulk-btn').disabled = true;
+
+  bulkResults = [];
+  const total = urls.length;
+  document.getElementById('prog-total').textContent = `of ${total}`;
+
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+    document.getElementById('bulk-load-status').textContent = `Analyzing ${i + 1} of ${total}...`;
+    document.getElementById('bulk-load-url').textContent = url.substring(0, 60) + (url.length > 60 ? '…' : '');
+    document.getElementById('prog-fill').style.width = ((i / total) * 100) + '%';
+    document.getElementById('prog-done').textContent = `${i} done`;
+
+    try {
+      const html = await fetchPage(url);
+      const data = parsePage(html, url, target, kw);
+      bulkResults.push({ url, status: 'success', data });
+    } catch (err) {
+      bulkResults.push({ url, status: 'error', error: err.message });
+    }
+
+    // small delay to avoid hammering proxy
+    await new Promise(r => setTimeout(r, 400));
+  }
+
+  document.getElementById('prog-fill').style.width = '100%';
+  document.getElementById('prog-done').textContent = `${total} done`;
+  await new Promise(r => setTimeout(r, 300));
+
+  document.getElementById('bulk-loading').classList.remove('active');
+  renderBulk();
+}
+
+function riskColor(score) {
+  if (score <= 20) return 'var(--green)';
+  if (score <= 45) return 'var(--orange)';
+  if (score <= 70) return '#FF8C00';
+  return 'var(--red)';
+}
+
+function renderBulk() {
+  const tbody = document.getElementById('bulk-tbody');
+  tbody.innerHTML = bulkResults.map((r, i) => {
+    if (r.status === 'error') {
+      return `<tr><td style="color:var(--muted)">${i+1}</td>
+        <td class="td-url" style="color:var(--red)" title="${r.url}">${r.url.substring(0,40)}…</td>
+        <td colspan="6" style="color:var(--red);font-size:10px">Failed to fetch — ${r.error}</td></tr>`;
+    }
+    const d = r.data;
+    const chipMap = { dofollow: 'fc-do', nofollow: 'fc-no', ugc: 'fc-ugc', Sponsored: 'fc-sp' };
+    const anchorClsMap = { 'Branded':'at-branded','Exact Match':'at-exact','Partial Match':'at-partial','Naked URL':'at-naked','Generic':'at-generic','Natural / LSI':'at-partial','Unknown':'at-generic' };
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td class="td-url" title="${d.sourceUrl}">${d.srcHost.replace('www.','')}…</td>
+      <td class="td-anchor">${d.anchorText === '—' ? '<span style="color:var(--muted)">—</span>' : d.anchorText}</td>
+      <td><span class="anchor-type-badge ${anchorClsMap[d.anchorClass.type]||'at-generic'}" style="font-size:9px;padding:3px 8px">${d.anchorClass.type}</span></td>
+      <td><span class="fchip ${chipMap[d.followType]||'fc-do'}" style="font-size:9px;padding:3px 8px">${d.followType}</span></td>
+      <td style="color:var(--muted2)">${d.domSection.split('/')[0].trim()}</td>
+      <td><span style="color:${riskColor(d.risk.score)};font-weight:700">${d.risk.score}</span><span style="color:var(--muted)">/100</span></td>
+      <td class="td-status">${d.targetLinks > 0 ? '<span style="color:var(--green)">✓ Live</span>' : '<span style="color:var(--red)">✗ None</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  // Summary KPIs
+  const successResults = bulkResults.filter(r => r.status === 'success').map(r => r.data);
+  const totalFound = successResults.filter(d => d.targetLinks > 0).length;
+  const avgRisk = successResults.length ? Math.round(successResults.reduce((a, d) => a + d.risk.score, 0) / successResults.length) : 0;
+  const dofollowCount = successResults.filter(d => d.followType === 'Dofollow' && d.targetLinks > 0).length;
+  const errors = bulkResults.filter(r => r.status === 'error').length;
+
+  document.getElementById('bulk-kpi-row').innerHTML = `
+    <div class="kpi kpi-accent"><div class="kpi-lbl">URLs Analyzed</div><div class="kpi-val">${bulkResults.length}</div><div class="kpi-sub">total</div></div>
+    <div class="kpi kpi-green"><div class="kpi-lbl">Links Found</div><div class="kpi-val">${totalFound}</div><div class="kpi-sub">to target</div></div>
+    <div class="kpi kpi-purple"><div class="kpi-lbl">Dofollow</div><div class="kpi-val">${dofollowCount}</div><div class="kpi-sub">confirmed</div></div>
+    <div class="kpi kpi-orange"><div class="kpi-lbl">Avg Risk</div><div class="kpi-val">${avgRisk}</div><div class="kpi-sub">out of 100</div></div>
+    <div class="kpi kpi-red"><div class="kpi-lbl">Errors</div><div class="kpi-val">${errors}</div><div class="kpi-sub">fetch failed</div></div>`;
+
+  // Summary signals
+  const anchorTypes = {};
+  successResults.forEach(d => { anchorTypes[d.anchorClass.type] = (anchorTypes[d.anchorClass.type] || 0) + 1; });
+  const topAnchor = Object.entries(anchorTypes).sort((a,b) => b[1]-a[1])[0];
+  document.getElementById('bulk-sig-grid').innerHTML = [
+    { label: 'Success Rate', sub: `${successResults.length}/${bulkResults.length} pages fetched`, status: errors === 0 ? 'pass' : errors < 3 ? 'warn' : 'fail' },
+    { label: 'Backlinks Confirmed', sub: `${totalFound} of ${successResults.length} pages`, status: totalFound > 0 ? 'pass' : 'fail' },
+    { label: 'Dofollow Ratio', sub: `${dofollowCount}/${totalFound} target links`, status: dofollowCount === totalFound ? 'pass' : dofollowCount > 0 ? 'warn' : 'fail' },
+    { label: 'Avg Risk Level', sub: avgRisk <= 30 ? 'Low — profile looks healthy' : avgRisk <= 60 ? 'Moderate — review signals' : 'High — action needed', status: avgRisk <= 30 ? 'pass' : avgRisk <= 60 ? 'warn' : 'fail' },
+    { label: 'Top Anchor Type', sub: topAnchor ? `${topAnchor[0]} (${topAnchor[1]}x)` : '—', status: topAnchor?.[0] === 'Exact Match' ? 'warn' : 'pass' },
+    { label: 'Errors', sub: errors > 0 ? `${errors} URLs failed (CORS/unavailable)` : 'All pages fetched ✓', status: errors === 0 ? 'pass' : 'warn' },
+  ].map(s => `<div class="sig-item"><div class="sig-dot sig-${s.status}"></div><div><div class="sig-label">${s.label}</div><div class="sig-sub">${s.sub}</div></div></div>`).join('');
+
+  document.getElementById('bulk-results').classList.add('active');
+  document.getElementById('bulk-btn').disabled = false;
+  setTimeout(() => document.getElementById('bulk-results').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+// ══════════════════════════════════
+// EXPORT
+// ══════════════════════════════════
+function exportSingleCSV() {
+  const d = singleData;
+  if (!d.sourceUrl) return;
+  const rows = [
+    ['Field','Value'],
+    ['Source URL', d.sourceUrl],
+    ['Target Domain', d.targetDomain],
+    ['Backlink Found', d.targetLinks > 0 ? 'Yes' : 'No'],
+    ['Links to Target', d.targetLinks],
+    ['Anchor Text', d.anchorText],
+    ['Anchor Type', d.anchorClass.type],
+    ['Follow Type', d.followType],
+    ['DOM Section', d.domSection],
+    ['Link Position', d.domPosition],
+    ['Risk Score', d.risk.score + '/100'],
+    ['Risk Label', d.risk.label],
+    ['Total Links', d.totalLinks],
+    ['External Links', d.extLinks],
+    ['Dofollow Links', d.dofollow],
+    ['Page Title', d.title],
+    ['Meta Description', d.metaDesc],
+    ['H1', d.h1],
+    ['Canonical', d.canonical],
+    ['Robots', d.robots],
+  ];
+  downloadCSV(rows, 'linkscope-single-analysis.csv');
+}
+
+function exportBulkCSV() {
+  const rows = [['#','Source URL','Domain','Anchor Text','Anchor Type','Follow Type','Placement','Risk Score','Risk Label','Links Found','Total Ext Links','Error']];
+  bulkResults.forEach((r, i) => {
+    if (r.status === 'error') {
+      rows.push([i+1, r.url, '—','—','—','—','—','—','—','—','—', r.error]);
+    } else {
+      const d = r.data;
+      rows.push([i+1, d.sourceUrl, d.srcHost, d.anchorText, d.anchorClass.type, d.followType, d.domSection, d.risk.score, d.risk.label, d.targetLinks, d.extLinks, '']);
+    }
+  });
+  downloadCSV(rows, 'linkscope-bulk-analysis.csv');
+  toast('✓ Bulk CSV exported');
+}
+
+function downloadCSV(rows, filename) {
+  const csv = rows.map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  toast('✓ CSV exported');
+}
+
+function copySingleReport() {
+  const d = singleData;
+  if (!d.sourceUrl) return;
+  const report = `LINKSCOPE v2 — BACKLINK ANALYSIS REPORT
+==========================================
+Source: ${d.sourceUrl}
+Target Domain: ${d.targetDomain || 'N/A'}
+
+BACKLINK DATA
+─────────────
+Backlink Found: ${d.targetLinks > 0 ? 'YES' : 'NO'}
+Links to Target: ${d.targetLinks}
+Anchor Text: "${d.anchorText}"
+Anchor Type: ${d.anchorClass.type}
+Follow Type: ${d.followType}
+
+DOM PLACEMENT
+─────────────
+Section: ${d.domSection}
+Position: ${d.domPosition}
+SEO Value: ${d.domSeoValue}
+
+RISK ASSESSMENT
+───────────────
+Risk Score: ${d.risk.score}/100
+${d.risk.label}
+${d.risk.factors.map(f => `· ${f.label}: ${f.val} (${f.note})`).join('\n')}
+
+PAGE META
+─────────
+Title: ${d.title}
+H1: ${d.h1}
+Meta Desc: ${d.metaDesc}
+Canonical: ${d.canonical}
+Robots: ${d.robots}`;
+  navigator.clipboard.writeText(report).then(() => toast('✓ Report copied to clipboard'));
+}
+
+function copyTemplate() {
+  const txt = document.getElementById('outreach-template').textContent;
+  navigator.clipboard.writeText(txt).then(() => toast('✓ Template copied'));
+}
+
+// keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    const active = document.querySelector('.panel.active');
+    if (active?.id === 'panel-single') runSingle();
+  }
+});
+</script>
+</body>
+</html>
